@@ -1,0 +1,38 @@
+{
+  "name": "@arb/report-language",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "exports": {
+    ".": "./src/index.ts",
+    "./client": "./src/client.ts",
+    "./web": "./src/web/index.ts",
+    "./pdf": "./src/pdf/index.ts",
+    "./eval": "./src/eval/index.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "build": "tsc --noEmit",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@babel/parser": "^7.26.2",
+    "@babel/traverse": "^7.26.4",
+    "esbuild": "^0.24.0"
+  },
+  "peerDependencies": {
+    "@react-pdf/renderer": "^4.3.0",
+    "react": "^18.3.1 || ^19.0.0"
+  },
+  "devDependencies": {
+    "@react-pdf/renderer": "^4.3.0",
+    "@types/babel__traverse": "^7.20.6",
+    "@types/react": "^19.2.0",
+    "react": "^19.2.0",
+    "react-dom": "^19.2.0",
+    "typescript": "^5.6.3",
+    "vitest": "^2.1.8"
+  }
+}

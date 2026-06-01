@@ -1,0 +1,102 @@
+# Local infra + optional app services.
+#
+#   docker compose up -d                  # Postgres + Redis only (run apps on host)
+#   docker compose --profile apps up      # also build & run web + worker
+#
+# When running apps on the HOST (npm run dev:web / dev:worker), point your .env at:
+#   DATABASE_URL=postgres://arb:arb@localhost:5432/arb
+#   REDIS_URL=redis://localhost:6379
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: arb
+      POSTGRES_PASSWORD: arb
+      POSTGRES_DB: arb
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U arb -d arb"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    command: ["redis-server", "--appendonly", "yes"]
+    ports:
+      - "6379:6379"
+    volumes:
+      - redisdata:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  # One-shot: apply Drizzle migrations. Run `npm run db:generate` first so
+  # packages/db/drizzle contains SQL. Part of the `apps` profile.
+  migrate:
+    profiles: ["apps"]
+    build:
+      context: .
+      dockerfile: apps/worker/Dockerfile
+    command: ["npm", "run", "db:migrate"]
+    environment:
+      DATABASE_URL: postgres://arb:arb@postgres:5432/arb
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: "no"
+
+  worker:
+    profiles: ["apps"]
+    build:
+      context: .
+      dockerfile: apps/worker/Dockerfile
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      NODE_ENV: production
+      DATABASE_URL: postgres://arb:arb@postgres:5432/arb
+      REDIS_URL: redis://redis:6379
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
+
+  web:
+    profiles: ["apps"]
+    build:
+      context: .
+      dockerfile: apps/web/Dockerfile
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      NODE_ENV: production
+      DATABASE_URL: postgres://arb:arb@postgres:5432/arb
+      REDIS_URL: redis://redis:6379
+      APP_URL: http://localhost:3000
+    ports:
+      - "3000:3000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
+
+volumes:
+  pgdata:
+  redisdata:

@@ -1,0 +1,28 @@
+@import "tailwindcss";
+
+/*
+ * Tailwind styles the APP CHROME ONLY (nav, dashboard, chat shell, buttons).
+ * The report vocabulary (@arb/report-language) never uses Tailwind: it styles
+ * via renderer-agnostic token objects so the same component renders to DOM and
+ * to @react-pdf. Keep that boundary: do not style report content with classes.
+ */
+
+ 
+:root {
+  --chrome-bg: #0f1115;
+  --chrome-panel: #171a21;
+  --chrome-border: #262b35;
+  --chrome-text: #e6e8ec;
+  --chrome-muted: #9aa3b2;
+  --chrome-accent: #0b62d6;
+}
+
+html,
+body {
+  height: 100%;
+}
+
+body {
+  background: var(--chrome-bg);
+  color: var(--chrome-text);
+}
